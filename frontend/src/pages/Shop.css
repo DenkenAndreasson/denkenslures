@@ -20,11 +20,18 @@
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
+  padding-top: 96px;
 }
 
 .shop-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   border-bottom: 2px solid var(--shop-accent);
-  background: repeating-linear-gradient(
+  background-color: var(--shop-bg);
+  background-image: repeating-linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.02) 0 2px,
     transparent 2px 12px
@@ -504,4 +511,28 @@
 
 .shop-thankyou strong {
   color: var(--shop-accent);
+}
+
+.shop-back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--shop-accent);
+  background: var(--shop-panel);
+  color: var(--shop-accent);
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.shop-back-to-top:hover {
+  background: rgba(240, 144, 13, 0.1);
 }

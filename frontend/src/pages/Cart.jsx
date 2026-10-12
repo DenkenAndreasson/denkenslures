@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
 
 function Cart() {
   let { items, removeFromCart, updateQuantity, total } = useCart()
+  let { formatPrice } = useCurrency()
 
   return (
     <div className="shop-page">
@@ -37,7 +39,7 @@ function Cart() {
                       +
                     </button>
                   </div>
-                  <span className="shop-cart-item-price">{item.price * item.quantity} kr</span>
+                  <span className="shop-cart-item-price">{formatPrice(item.price * item.quantity)}</span>
                   <button
                     type="button"
                     className="shop-remove-btn"
@@ -52,7 +54,7 @@ function Cart() {
 
             <div className="shop-cart-total">
               <span>
-                Totalt: <strong>{total} kr</strong>
+                Totalt: <strong>{formatPrice(total)}</strong>
               </span>
               <Link to="/kassa" className="shop-btn shop-btn-primary">
                 Till kassan

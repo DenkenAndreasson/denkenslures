@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_URL } from '../apiConfig.js'
 import { useCart } from '../context/CartContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
 
 function Home() {
   let { addToCart } = useCart()
+  let { formatPrice } = useCurrency()
   let [products, setProducts] = useState([])
   let [error, setError] = useState(null)
   let [search, setSearch] = useState('')
@@ -109,7 +111,7 @@ function Home() {
                 </span>
               </Link>
               <div className="shop-product-footer">
-                <span className="shop-product-price">{product.price} kr</span>
+                <span className="shop-product-price">{formatPrice(product.price)}</span>
                 <button
                   type="button"
                   className="shop-btn shop-btn-sm"

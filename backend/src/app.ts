@@ -1,11 +1,10 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import expressSession from "express-session";
 import productsRouter from "./product-routes.js";
 import ordersRouter from "./orders-routes.js";
-
-dotenv.config();
+import currencyRouter from "./routes/currency-routes.js";
 
 const app = express();
 
@@ -14,6 +13,8 @@ app.use(cors());
 
 // Läs in JSON-body från POST/PUT-requests, t.ex. när vi skapar en produkt
 app.use(express.json());
+
+app.use("/api/currency", currencyRouter);
 
 app.use(
     expressSession({

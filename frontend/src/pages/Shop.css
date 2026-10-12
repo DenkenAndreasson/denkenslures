@@ -60,6 +60,12 @@
   text-transform: uppercase;
 }
 
+.shop-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .shop-cart-link {
   display: inline-flex;
   align-items: center;

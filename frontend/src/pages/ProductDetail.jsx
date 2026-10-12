@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { API_URL } from '../apiConfig.js'
 import { useCart } from '../context/CartContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
 
 function ProductDetail() {
   let { id } = useParams()
   let navigate = useNavigate()
   let { addToCart } = useCart()
+  let { formatPrice } = useCurrency()
   let [product, setProduct] = useState(null)
   let [quantity, setQuantity] = useState(1)
   let [error, setError] = useState(null)
@@ -67,7 +69,7 @@ function ProductDetail() {
 
           <div className="shop-detail-info">
             <h2>{product.name}</h2>
-            <p className="shop-detail-price">{product.price} kr</p>
+            <p className="shop-detail-price">{formatPrice(product.price)}</p>
             <p className="shop-detail-description">{product.description}</p>
 
             <div className="shop-detail-specs">

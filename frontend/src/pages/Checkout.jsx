@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_URL } from '../apiConfig.js'
 import { useCart } from '../context/CartContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
 
 function Checkout() {
   let navigate = useNavigate()
   let { items, total, clearCart } = useCart()
+  let { formatPrice } = useCurrency()
   let [error, setError] = useState(null)
   let [submitting, setSubmitting] = useState(false)
 
@@ -107,12 +109,12 @@ function Checkout() {
                   <span>
                     {item.name} × {item.quantity}
                   </span>
-                  <span>{item.price * item.quantity} kr</span>
+                  <span>{formatPrice(item.price * item.quantity)}</span>
                 </li>
               ))}
             </ul>
             <p className="shop-order-total">
-              Totalt: <strong>{total} kr</strong>
+              Totalt: <strong>{formatPrice(total)}</strong>
             </p>
           </div>
         </div>

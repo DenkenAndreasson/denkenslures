@@ -7,7 +7,9 @@
     "dev": "nodemon --exec tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "migrate": "tsx src/scripts/migrate-labb1.ts",
+    "import:dry-run": "tsx src/scripts/dry-run-import.ts"
   },
   "keywords": [],
   "author": "",

@@ -10,6 +10,10 @@ function AdminHome() {
           <span>Produkter</span>
           <span className="admin-nav-card-desc">Hantera produkter i butiken</span>
         </Link>
+        <Link to="/admin/import" className="admin-nav-card">
+          <span>Importera produkter</span>
+          <span className="admin-nav-card-desc">Hämta leverantörens katalog (CSV/XML)</span>
+        </Link>
         <Link to="/admin/ordrar" className="admin-nav-card">
           <span>Ordrar</span>
           <span className="admin-nav-card-desc">Se inkomna beställningar</span>

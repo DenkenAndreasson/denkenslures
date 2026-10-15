@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
+import { productImage, productMeta } from '../productInfo.js'
+
 
 function Cart() {
   let { items, removeFromCart, updateQuantity, total } = useCart()
@@ -20,11 +22,11 @@ function Cart() {
             <ul className="shop-cart-list">
               {items.map((item) => (
                 <li key={item.id}>
-                  <img src={item.image_url} alt={item.name} />
+                  <img src={productMeta(item)} alt={item.name} />
                   <div className="shop-cart-item-info">
                     <span className="shop-product-name">{item.name}</span>
                     <span className="shop-product-meta">
-                      {item.model} · {item.size}
+                      {productMeta(item)}
                     </span>
                   </div>
                   <div className="shop-quantity">

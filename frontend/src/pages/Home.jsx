@@ -4,6 +4,7 @@ import { API_URL } from '../apiConfig.js'
 import { useCart } from '../context/CartContext.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 import NavBar from './NavBar.jsx'
+import { productImage, productMeta } from '../productInfo.js'
 
 function Home() {
   let { addToCart } = useCart()
@@ -104,10 +105,10 @@ function Home() {
           {filteredProducts.map((product) => (
             <li key={product.id}>
               <Link to={`/produkt/${product.id}`} className="shop-product-link">
-                <img src={product.image_url} alt={product.name} />
+                <img src={productImage(product)} alt={product.name} />
                 <span className="shop-product-name">{product.name}</span>
                 <span className="shop-product-meta">
-                  {product.model} · {product.size}
+                  {productMeta(product)}
                 </span>
               </Link>
               <div className="shop-product-footer">

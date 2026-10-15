@@ -11,8 +11,9 @@ router.get("/rates", async (req, res) => {
         const rates = await getRates(base);
         res.json(rates);
     } catch (err) {
+        console.error(`GET /api/currency/rates:`, err)
         res.status(502).json({ error: "Kunde inte hämta kurserna just nu." });
     }
 });
 
-export default router;
+export default router;

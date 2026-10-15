@@ -39,6 +39,8 @@ export function CartProvider({ children }) {
           image_url: product.image_url,
           model: product.model,
           size: product.size,
+          category: product.category,
+          variants: product.variants
         },
       ]
     })

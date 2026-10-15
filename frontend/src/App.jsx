@@ -7,6 +7,7 @@ import ThankYou from './pages/ThankYou.jsx'
 import AdminHome from './pages/admin/AdminHome.jsx'
 import ProductList from './pages/admin/ProductList.jsx'
 import ProductEdit from './pages/admin/ProductEdit.jsx'
+import ProductImport from './pages/admin/ProductImport.jsx'
 import OrderList from './pages/admin/OrderList.jsx'
 import OrderDetail from './pages/admin/OrderDetail.jsx'
 import './pages/admin/admin.css'
@@ -23,6 +24,7 @@ function App() {
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/produkter" element={<ProductList />} />
       <Route path="/admin/produkter/:id" element={<ProductEdit />} />
+      <Route path="/admin/import" element={<ProductImport />} />
       <Route path="/admin/ordrar" element={<OrderList />} />
       <Route path="/admin/ordrar/:id" element={<OrderDetail />} />
     </Routes>

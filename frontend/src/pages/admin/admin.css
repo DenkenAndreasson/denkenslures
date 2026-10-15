@@ -25,9 +25,9 @@
 
 .admin-nav {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  max-width: 480px;
+  max-width: 720px;
   margin-top: 16px;
 }
 
@@ -263,4 +263,71 @@
 
 .order-total strong {
   color: var(--accent);
+}
+
+/* --- Import (labb 1) --- */
+
+.admin-intro {
+  max-width: 60ch;
+  color: var(--text);
+  margin: 8px 0 0;
+}
+
+.admin-import-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.import-report {
+  margin-top: 24px;
+  max-width: 720px;
+}
+
+.import-report h2 {
+  margin: 0;
+}
+
+.import-report-sub {
+  margin: 4px 0 16px;
+  color: var(--text);
+}
+
+.import-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.import-stats div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.import-stats dt {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.import-stats dd {
+  margin: 4px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-stat-warn {
+  border-color: #e5484d !important;
+}
+
+.import-stat-warn dd {
+  color: #e5484d;
 }

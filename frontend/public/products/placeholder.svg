@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Bild saknas">
+  <rect width="400" height="300" fill="#e7ebee"/>
+  <g fill="none" stroke="#9aa6b0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M110 170c40-45 110-45 150 0-40 45-110 45-150 0z"/>
+    <path d="M260 170l40-30v60z"/>
+  </g>
+  <circle cx="145" cy="162" r="6" fill="#9aa6b0"/>
+  <text x="200" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#6b7883">Bild saknas</text>
+</svg>

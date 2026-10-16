@@ -1,7 +1,7 @@
 import { prettifyError, z } from "zod";
 import { fetchWithTimeout } from "../lib/fetchWithTimeouts";
 
-const BASE_URL = "https://api.frankfurter.dev/v1fdg";
+const BASE_URL = "https://api.frankfurter.dev/v1";
 
 export type Rates = {
     base: string;

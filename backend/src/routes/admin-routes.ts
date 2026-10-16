@@ -2,6 +2,8 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { getSupplierCatalog } from "../integrations/supplierAdapter.js";
 import { validateCandidate, type ImportedProduct } from "../validation/importedProduct.js";
+import { reindexAll, type ProductRow } from "../integrations/searchAdapter.js";
+
 
 const router = Router();
 
@@ -111,6 +113,29 @@ router.post("/products/import/:format", async (req, res) => {
         res.status(500).json({ error: "Importen kunde inte sparas. Inga produkter ändrades." });
     } finally {
         connection?.release();
+    }
+});
+
+// POST /api/admin/search/reindex
+// Skickar alla produkter i databasen till Algolia och sätter indexets inställningar.
+// Behövs första gången, efter npm run seed, och när sökindexet har hamnat efter.
+router.post("/search/reindex", async (_req, res) => {
+    let rows: ProductRow[];
+    try {
+        const [result] = await pool.query("SELECT * FROM products");
+        rows = result as ProductRow[];
+    } catch (err) {
+        console.error("Reindex: kunde inte läsa databasen:", err);
+        res.status(500).json({ error: "Kunde inte läsa produkterna från databasen." });
+        return;
+    }
+
+    try {
+        const indexed = await reindexAll(rows);
+        res.json({ indexed, withoutSku: rows.length - indexed });
+    } catch (err) {
+        console.error("Reindex: kunde inte skicka till Algolia:", err);
+        res.status(502).json({ error: "Kunde inte nå söktjänsten. Försök igen om en stund." });
     }
 });
 

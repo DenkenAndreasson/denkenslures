@@ -3,6 +3,7 @@ import { pool } from "../db.js";
 import { getSupplierCatalog } from "../integrations/supplierAdapter.js";
 import { validateCandidate, type ImportedProduct } from "../validation/importedProduct.js";
 import { reindexAll, type ProductRow } from "../integrations/searchAdapter.js";
+import { syncProducts } from "../lib/searchSync.js";
 
 
 const router = Router();
@@ -14,14 +15,12 @@ type SkippedProduct = { sku: string | null; name: string | null; reason: string 
 //
 // Stegen: HÄMTA → PARSA → MAPPA (adaptern)  →  VALIDERA → SPARA (här)
 router.post("/products/import/:format", async (req, res) => {
-    // 1. Kontrollera formatet – allt annat är klientens fel (400).
     const { format } = req.params;
     if (format !== "csv" && format !== "xml") {
         res.status(400).json({ error: "Formatet måste vara csv eller xml." });
         return;
     }
 
-    // 2. Hämta + parsa + mappa. Om leverantören strular är det deras fel (502).
     let candidates;
     try {
         candidates = await getSupplierCatalog(format);
@@ -31,7 +30,6 @@ router.post("/products/import/:format", async (req, res) => {
         return;
     }
 
-    // 3. Validera varje produkt. Trasiga hoppas över MED orsak – resten fortsätter.
     const valid: ImportedProduct[] = [];
     const skipped: SkippedProduct[] = [];
     const seenSkus = new Set<string>();
@@ -54,7 +52,6 @@ router.post("/products/import/:format", async (req, res) => {
         valid.push(result.product);
     }
 
-    // 4. Spara med upsert. 
     let connection;
     try {
         connection = await pool.getConnection();
@@ -97,7 +94,8 @@ router.post("/products/import/:format", async (req, res) => {
             "SELECT COUNT(*) AS imported FROM products WHERE sku IS NOT NULL"
         );
 
-        // 5. Rapport till adminsidan.
+        const searchIndexed = await syncProducts("sku", valid.map((p) => p.sku));
+
         res.json({
             format,
             total: candidates.length,
@@ -106,6 +104,7 @@ router.post("/products/import/:format", async (req, res) => {
             unchanged,
             skipped,
             importedInDatabase: Number(imported),
+            searchIndexed,
         });
     } catch (err) {
         await connection?.rollback().catch(() => {});

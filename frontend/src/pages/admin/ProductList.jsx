@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { API_URL } from '../../apiConfig.js'
 
 function ProductList() {
   let [products, setProducts] = useState([])
   let [showForm, setShowForm] = useState(false)
   let [error, setError] = useState(null)
+  let location = useLocation()
+  let [warning, setWarning] = useState(location.state?.warning ?? null)
 
   useEffect(() => {
     let loadProducts = async () => {
@@ -29,6 +31,7 @@ function ProductList() {
     let form = e.target.elements
 
     let newProduct = {
+      sku: form.sku.value,
       name: form.name.value,
       price: Number(form.price.value),
       description: form.description.value,
@@ -44,14 +47,19 @@ function ProductList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct),
       })
-      if (!response.ok) throw new Error()
-      let created = await response.json()
+      let created = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(created?.error)
 
       setProducts((prev) => [...prev, created])
       setShowForm(false)
       setError(null)
-    } catch {
-      setError('Kunde inte skapa produkten.')
+      setWarning(
+        created.searchIndexed
+          ? null
+          : 'Produkten är skapad, men sökindexet är inte uppdaterat. Den syns inte i sökningen förrän du bygger om sökindexet under Importera produkter.'
+      )
+    } catch (err) {
+      setError(err.message || 'Kunde inte skapa produkten.')
     }
   }
 
@@ -60,6 +68,7 @@ function ProductList() {
       <h1>Produkter</h1>
 
       {error && <p className="admin-error">{error}</p>}
+      {warning && <p className="admin-warning">{warning}</p>}
 
       <div className="admin-toolbar">
         <Link to="/admin" className="btn">
@@ -74,6 +83,10 @@ function ProductList() {
 
       {showForm && (
         <form className="admin-form" onSubmit={handleCreate}>
+          <label>
+            Artikelnummer
+            <input name="sku" type="text" placeholder="t.ex. DLS-1017" required />
+          </label>
           <label>
             Namn
             <input name="name" type="text" required />

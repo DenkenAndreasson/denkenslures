@@ -6,6 +6,8 @@ function ProductImport() {
   let [report, setReport] = useState(null)
   let [loading, setLoading] = useState(null)
   let [error, setError] = useState(null)
+  let [reindexing, setReindexing] = useState(false)
+  let [reindexResult, setReindexResult] = useState(null)
 
   let runImport = async (format) => {
     setLoading(format)
@@ -27,6 +29,24 @@ function ProductImport() {
     }
   }
 
+  // Skickar ALLA produkter i databasen till Algolia.
+  let runReindex = async () => {
+    setReindexing(true)
+    setReindexResult(null)
+
+    try {
+      let response = await fetch(`${API_URL}/admin/search/reindex`, { method: 'POST' })
+      let data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(data?.error || 'Kunde inte bygga om sökindexet.')
+
+      setReindexResult({ ok: true, text: `Sökindexet är ombyggt: ${data.indexed} produkter skickades till Algolia.` })
+    } catch (err) {
+      setReindexResult({ ok: false, text: err.message || 'Kunde inte nå servern.' })
+    } finally {
+      setReindexing(false)
+    }
+  }
+
   return (
     <div className="admin-page">
       <h1>Importera produkter</h1>
@@ -40,7 +60,6 @@ function ProductImport() {
           <span aria-hidden="true">←</span> Tillbaka
         </Link>
         <div className="admin-import-buttons">
-          {/* Knapparna är avstängda medan en import pågår, så att ett dubbelklick inte startar två. */}
           <button
             type="button"
             className="btn btn-primary"
@@ -57,10 +76,21 @@ function ProductImport() {
           >
             {loading === 'xml' ? 'Importerar…' : 'Importera XML'}
           </button>
+          <button
+            type="button"
+            className="btn"
+            disabled={loading !== null || reindexing}
+            onClick={runReindex}
+          >
+            {reindexing ? 'Bygger om…' : 'Bygg om sökindex'}
+          </button>
         </div>
       </div>
 
       {error && <p className="admin-error">{error}</p>}
+      {reindexResult && (
+        <p className={reindexResult.ok ? 'admin-success' : 'admin-error'}>{reindexResult.text}</p>
+      )}
 
       {report && (
         <section className="import-report" aria-live="polite">
@@ -68,6 +98,15 @@ function ProductImport() {
           <p className="import-report-sub">
             {report.total} produkter i filen · {report.importedInDatabase} importerade produkter i databasen
           </p>
+
+          {report.searchIndexed ? (
+            <p className="admin-success">Sökindexet är uppdaterat.</p>
+          ) : (
+            <p className="admin-warning">
+              Produkterna är sparade, men sökindexet är inte uppdaterat. Klicka på "Bygg om sökindex"
+              när söktjänsten svarar igen.
+            </p>
+          )}
 
           <dl className="import-stats">
             <div>

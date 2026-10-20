@@ -8,6 +8,21 @@
   margin: 12px 0 0;
 }
 
+.admin-warning {
+  color: #f5a524;
+  border: 1px solid #f5a524;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 12px 0 0;
+  max-width: 70ch;
+}
+
+.admin-success {
+  color: #30a46c;
+  margin: 12px 0 0;
+}
+
+
 .admin-toolbar {
   display: flex;
   justify-content: space-between;

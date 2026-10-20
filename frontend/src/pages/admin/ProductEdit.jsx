@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_URL } from '../../apiConfig.js'
 
+// Visas på produktlistan om databasen sparade men Algolia inte svarade.
+const SEARCH_WARNING = 'Sparat i databasen, men sökindexet är inte uppdaterat. Sökningen kan visa gammal information tills du bygger om sökindexet under Importera produkter.'
+
 function ProductEdit() {
   let { id } = useParams()
   let navigate = useNavigate()
@@ -53,8 +56,9 @@ function ProductEdit() {
         body: JSON.stringify(updatedProduct),
       })
       if (!response.ok) throw new Error()
+      let saved = await response.json()
 
-      navigate('/admin/produkter')
+      navigate('/admin/produkter', { state: { warning: saved.searchIndexed ? null : SEARCH_WARNING } })
     } catch {
       setError('Kunde inte spara produkten.')
     }
@@ -67,11 +71,12 @@ function ProductEdit() {
 
     try {
       let response = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' })
-      if (!response.ok) throw new Error()
+      let data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(data?.error)
 
-      navigate('/admin/produkter')
-    } catch {
-      setError('Kunde inte ta bort produkten.')
+      navigate('/admin/produkter', { state: { warning: data.searchIndexed ? null : SEARCH_WARNING } })
+    } catch (err) {
+      setError(err.message || 'Kunde inte ta bort produkten.')
     }
   }
 
@@ -94,6 +99,7 @@ function ProductEdit() {
   return (
     <div className="admin-page">
       <h1>Redigera produkt</h1>
+      <p className="admin-intro">Artikelnummer: {product.sku ?? '–'}</p>
       {error && <p className="admin-error">{error}</p>}
       <form className="admin-form" onSubmit={handleSubmit}>
         <label>

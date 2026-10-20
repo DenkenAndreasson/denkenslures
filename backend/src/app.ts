@@ -6,6 +6,7 @@ import productsRouter from "./product-routes.js";
 import ordersRouter from "./orders-routes.js";
 import currencyRouter from "./routes/currency-routes.js";
 import adminRouter from "./routes/admin-routes.js"
+import searchRouter from "./routes/search-routes.js"
 
 
 const app = express();
@@ -35,7 +36,9 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
-app.use("/api/admin/", adminRouter)
+app.use("/api/admin/", adminRouter);
+app.use("/api/search", searchRouter);
+
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error(`${req.method} ${req.originalUrl}:`, err);

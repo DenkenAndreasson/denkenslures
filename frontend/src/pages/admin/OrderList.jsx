@@ -40,7 +40,7 @@ function OrderList() {
           <li key={order.id}>
             <Link to={`/admin/ordrar/${order.id}`}>
               <span>
-                #{order.id} – {order.customer_name}
+                #{order.id} - {order.customer_name} ({order.status})
               </span>
               <span className="order-list-date">
                 {new Date(order.created_at).toLocaleString('sv-SE')}

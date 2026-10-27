@@ -39,36 +39,4 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// POST /api/orders - skapa order + orderrader utifrån varukorgens innehåll
-router.post("/", async (req, res) => {
-    const { customer_name, customer_email, address, postal_code, city, items } = req.body;
-
-    try {
-        const [result]: any = await pool.query(
-            `INSERT INTO orders (customer_name, customer_email, address, postal_code, city)
-             VALUES (?, ?, ?, ?, ?)`,
-            [customer_name, customer_email, address, postal_code, city]
-        );
-
-        const orderId = result.insertId;
-
-        const orderItems = items.map((item: any) => [
-            orderId,
-            item.product_id,
-            item.quantity,
-            item.price_at_purchase,
-        ]);
-
-        await pool.query(
-            `INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES ?`,
-            [orderItems]
-        );
-
-        res.status(201).json({ id: orderId, customer_name, customer_email, address, postal_code, city, items });
-    } catch (err) {
-        console.error("POST /api/orders:", err);
-        res.status(500).json({ error: "Kunde inte skapa ordern." });
-    }
-});
-
 export default router;

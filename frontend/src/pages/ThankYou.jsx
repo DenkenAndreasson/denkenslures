@@ -1,22 +1,67 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { API_URL } from '../apiConfig.js'
+import { useCart } from '../context/CartContext.jsx'
 import NavBar from './NavBar.jsx'
 
+const STATUS_TEXT = { pending: 'Väntar på betalningen…', paid: 'Betald', cancelled: 'Avbruten' }
+
 function ThankYou() {
-  let location = useLocation()
-  let orderId = location.state?.orderId
+  let [searchParams] = useSearchParams()
+  let sessionId = searchParams.get('session_id')
+  let { clearCart } = useCart()
+  let [order, setOrder] = useState(null)
+  let [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!sessionId) return
+    let tries = 0
+    let timer
+
+    let loadOrder = async () => {
+      try {
+        let response = await fetch(`${API_URL}/checkout/session/${encodeURIComponent(sessionId)}`)
+        if (!response.ok) throw new Error()
+        let data = await response.json()
+        setOrder(data)
+        tries += 1
+        if (data.status === 'pending' && tries < 15) timer = setTimeout(loadOrder, 2000)
+      } catch {
+        setError('Kunde inte hämta ordern.')
+      }
+    }
+
+    loadOrder()
+    return () => clearTimeout(timer)
+  }, [sessionId])
+
+  useEffect(() => {
+    if (order?.status === 'paid') clearCart()
+  }, [order?.status])
 
   return (
     <div className="shop-page">
       <NavBar />
       <div className="shop-content">
         <div className="shop-thankyou">
-          <h2>Tack för din beställning!</h2>
-          {orderId ? (
-            <p className="shop-tagline">
-              Ordernummer: <strong>{orderId}</strong>
-            </p>
-          ) : (
-            <p className="shop-tagline">Din beställning är mottagen.</p>
+          {error && <p className="shop-error">{error}</p>}
+          {order && (
+            <div className="shop-order-summary">
+              <h3>Order {order.id}: {STATUS_TEXT[order.status]}</h3>
+              <ul>
+                {order.items.map((item) => (
+                  <li key={item.product_id}>
+                    <span>
+                      {item.name} × {item.quantity}
+                    </span>
+                    <span>{Number(item.price_at_purchase) * item.quantity} kr</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="shop-order-total">
+                Totalt: <strong>{Number(order.total)} kr</strong>
+              </p>
+            </div>
           )}
           <Link to="/" className="shop-btn shop-btn-primary">
             Fortsätt handla

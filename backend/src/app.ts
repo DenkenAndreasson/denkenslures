@@ -9,6 +9,7 @@ import adminRouter from "./routes/admin-routes.js"
 import searchRouter from "./routes/search-routes.js"
 import checkoutRouter from "./routes/checkout-routes.js";
 import stripeWebhookRouter from "./routes/stripe-webhook.js";
+import imageRouter from "./routes/image-routes.js";
 
 
 
@@ -42,6 +43,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/admin/", adminRouter);
+app.use("/api/admin/", imageRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/checkout", checkoutRouter);
 

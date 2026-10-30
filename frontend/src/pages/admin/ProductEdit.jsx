@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_URL } from '../../apiConfig.js'
+import ProductImageUpload from './ProductImageUpload.jsx'
 
 // Visas på produktlistan om databasen sparade men Algolia inte svarade.
 const SEARCH_WARNING = 'Sparat i databasen, men sökindexet är inte uppdaterat. Sökningen kan visa gammal information tills du bygger om sökindexet under Importera produkter.'
@@ -43,7 +44,6 @@ function ProductEdit() {
       name: form.name.value,
       price: Number(form.price.value),
       description: form.description.value,
-      image_url: form.image_url.value,
       model: form.model.value,
       size: form.size.value,
       stock_quantity: Number(form.stock_quantity.value),
@@ -115,10 +115,6 @@ function ProductEdit() {
           <textarea name="description" defaultValue={product.description}></textarea>
         </label>
         <label>
-          Bild-URL
-          <input name="image_url" type="text" defaultValue={product.image_url} />
-        </label>
-        <label>
           Modell
           <select name="model" defaultValue={product.model || ''}>
             <option value="" disabled>
@@ -141,6 +137,7 @@ function ProductEdit() {
         </label>
         <button className="btn admin-form-full" type="submit">Spara</button>
       </form>
+      <ProductImageUpload product={product} onUploaded={(image) => setProduct({ ...product, ...image })} />
       <button className="btn btn-danger" type="button" onClick={handleDelete}>
         Ta bort
       </button>

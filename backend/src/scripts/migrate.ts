@@ -8,6 +8,7 @@ const COLUMNS: Record<string, Record<string, string>> = {
         ean: "VARCHAR(13) NULL",
         category: "VARCHAR(100) NULL",
         variants: "JSON NULL",
+        image_path: "VARCHAR(255) NULL",
     },
     orders: {
         status: "ENUM('pending', 'paid', 'cancelled') NOT NULL DEFAULT 'pending'",

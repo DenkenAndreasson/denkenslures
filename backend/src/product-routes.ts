@@ -66,14 +66,14 @@ router.post("/", async (req, res) => {
 
 // PUT /api/products/:id - redigera produkt
 router.put("/:id", async (req, res) => {
-    const { name, price, description, image_url, model, size, stock_quantity } = req.body;
+    const { name, price, description, model, size, stock_quantity } = req.body;
 
     try {
         const [result]: any = await pool.query(
             `UPDATE products
-             SET name = ?, price = ?, description = ?, image_url = ?, model = ?, size = ?, stock_quantity = ?
+             SET name = ?, price = ?, description = ?, model = ?, size = ?, stock_quantity = ?
              WHERE id = ?`,
-            [name, price, description, image_url, model, size, stock_quantity, req.params.id]
+            [name, price, description, model, size, stock_quantity, req.params.id]
         );
 
         if (result.affectedRows === 0) {
@@ -87,7 +87,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const searchIndexed = await syncProducts("id", [Number(req.params.id)]);
-    res.json({ id: Number(req.params.id), name, price, description, image_url, model, size, stock_quantity, searchIndexed });
+    res.json({ id: Number(req.params.id), name, price, description, model, size, stock_quantity, searchIndexed });
 });
 
 // DELETE /api/products/:id - ta bort produkt

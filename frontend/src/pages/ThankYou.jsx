@@ -57,6 +57,21 @@ function ThankYou() {
                     <span>{Number(item.price_at_purchase) * item.quantity} kr</span>
                   </li>
                 ))}
+                {order.shipping_method != null && order.shipping_price != null && (
+                  <li>
+                    <span>
+                      {order.shipping_method === 'pickup_point' ? 'Frakt: ombud' : 'Frakt: hemleverans'}
+                      {order.shipping_method === 'pickup_point' && (
+                        <>
+                          <br />
+                          {order.pickup_point_name}
+                          {order.pickup_point_address && `, ${order.pickup_point_address}`}
+                        </>
+                      )}
+                    </span>
+                    <span>{Number(order.shipping_price) === 0 ? 'Fri frakt' : `${Number(order.shipping_price)} kr`}</span>
+                  </li>
+                )}
               </ul>
               <p className="shop-order-total">
                 Totalt: <strong>{Number(order.total)} kr</strong>

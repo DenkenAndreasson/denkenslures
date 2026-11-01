@@ -1,5 +1,6 @@
 import type { PoolConnection } from "mysql2/promise";
 import { pool } from "../db.js";
+import { calculateShippingPrice, type ShippingMethod } from "./shipping.js";
 
 export type CartLine = { product_id: number; quantity: number };
 
@@ -10,6 +11,8 @@ export type Customer = {
     postal_code: string;
     city: string;
 };
+
+export type PickupPoint = { id: string; name: string; address: string };
 
 // En orderrad med VÅRT namn och pris från databasen.
 export type OrderLine = { product_id: number; name: string; price: number; quantity: number };
@@ -44,18 +47,49 @@ async function priceCart(conn: PoolConnection, cart: CartLine[]): Promise<OrderL
     });
 }
 
-export async function createPendingOrder(customer: Customer, cart: CartLine[]) {
+export async function calculateGoodsValue(cart: CartLine[]): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+        const lines = await priceCart(conn, cart);
+        return lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+    } finally {
+        conn.release();
+    }
+}
+
+export async function createPendingOrder(
+    customer: Customer,
+    cart: CartLine[],
+    shippingMethod: ShippingMethod,
+    pickupPoint?: PickupPoint,
+) {
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
 
         const lines = await priceCart(conn, cart);
-        const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+        const goodsValue = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+        const shippingPrice = calculateShippingPrice(shippingMethod, goodsValue);
+        const total = goodsValue + shippingPrice;
 
         const [result]: any = await conn.query(
-            `INSERT INTO orders (customer_name, customer_email, address, postal_code, city, status, total)
-             VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-            [customer.customer_name, customer.customer_email, customer.address, customer.postal_code, customer.city, total]
+            `INSERT INTO orders (
+                customer_name, customer_email, address, postal_code, city, status, total,
+                shipping_method, shipping_price, pickup_point_id, pickup_point_name, pickup_point_address
+             ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
+            [
+                customer.customer_name,
+                customer.customer_email,
+                customer.address,
+                customer.postal_code,
+                customer.city,
+                total,
+                shippingMethod,
+                shippingPrice,
+                pickupPoint?.id ?? null,
+                pickupPoint?.name ?? null,
+                pickupPoint?.address ?? null,
+            ]
         );
         const orderId: number = result.insertId;
 
@@ -65,7 +99,7 @@ export async function createPendingOrder(customer: Customer, cart: CartLine[]) {
         );
 
         await conn.commit();
-        return { orderId, lines, total };
+        return { orderId, lines, total, shipping_price: shippingPrice };
     } catch (err) {
         await conn.rollback();
         throw err;

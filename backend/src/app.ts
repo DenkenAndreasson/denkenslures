@@ -10,6 +10,7 @@ import searchRouter from "./routes/search-routes.js"
 import checkoutRouter from "./routes/checkout-routes.js";
 import stripeWebhookRouter from "./routes/stripe-webhook.js";
 import imageRouter from "./routes/image-routes.js";
+import shippingRouter from "./routes/shipping-routes.js";
 
 
 
@@ -22,6 +23,7 @@ app.use("/api/stripe/webhook", stripeWebhookRouter);
 
 // Läs in JSON-body från POST/PUT-requests, t.ex. när vi skapar en produkt
 app.use(express.json());
+app.use("/api/shipping", shippingRouter);
 
 app.use("/api/currency", currencyRouter);
 app.use(

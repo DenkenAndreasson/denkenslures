@@ -453,6 +453,30 @@
   border-color: var(--shop-accent);
 }
 
+.shop-form label.shop-shipping-option {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.shop-form input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--shop-accent);
+  flex: 0 0 auto;
+}
+
+.shop-form select {
+  font: inherit;
+  padding: 10px 14px;
+  border: 1px solid var(--shop-border);
+  border-radius: 4px;
+  background: var(--shop-panel);
+  color: var(--shop-text-h);
+}
+
 .shop-form button {
   align-self: flex-start;
 }

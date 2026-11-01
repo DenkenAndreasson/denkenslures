@@ -38,7 +38,10 @@ function OrderDetail() {
     )
   }
 
-  let total = order.items.reduce((sum, item) => sum + item.quantity * item.price_at_purchase, 0)
+  let total =
+    order.total == null
+      ? order.items.reduce((sum, item) => sum + item.quantity * Number(item.price_at_purchase), 0)
+      : Number(order.total)
 
   return (
     <div className="admin-page">
@@ -69,10 +72,27 @@ function OrderDetail() {
             <tr key={item.id}>
               <td>{item.name}</td>
               <td>{item.quantity}</td>
-              <td>{item.price_at_purchase} kr</td>
-              <td>{item.quantity * item.price_at_purchase} kr</td>
+              <td>{Number(item.price_at_purchase)} kr</td>
+              <td>{item.quantity * Number(item.price_at_purchase)} kr</td>
             </tr>
           ))}
+          {order.shipping_method != null && order.shipping_price != null && (
+            <tr>
+              <td>
+                {order.shipping_method === 'pickup_point' ? 'Frakt: ombud' : 'Frakt: hemleverans'}
+                {order.shipping_method === 'pickup_point' && (
+                  <>
+                    <br />
+                    {order.pickup_point_name}
+                    {order.pickup_point_address && `, ${order.pickup_point_address}`}
+                  </>
+                )}
+              </td>
+              <td>1</td>
+              <td>{Number(order.shipping_price) === 0 ? 'Fri frakt' : `${Number(order.shipping_price)} kr`}</td>
+              <td>{Number(order.shipping_price) === 0 ? 'Fri frakt' : `${Number(order.shipping_price)} kr`}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 

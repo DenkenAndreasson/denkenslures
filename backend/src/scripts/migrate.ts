@@ -15,6 +15,11 @@ const COLUMNS: Record<string, Record<string, string>> = {
         stripe_session_id: "VARCHAR(255) NULL UNIQUE",
         total: "DECIMAL(10, 2) NULL",
         paid_at: "DATETIME NULL",
+        shipping_method: "ENUM('pickup_point', 'home_delivery') NULL",
+        shipping_price: "DECIMAL(10, 2) NULL",
+        pickup_point_id: "VARCHAR(50) NULL",
+        pickup_point_name: "VARCHAR(255) NULL",
+        pickup_point_address: "VARCHAR(255) NULL",
     },
 };
 

@@ -61,6 +61,7 @@ export async function createPendingOrder(
     customer: Customer,
     cart: CartLine[],
     shippingMethod: ShippingMethod,
+    customerId: number | null,
     pickupPoint?: PickupPoint,
 ) {
     const conn = await pool.getConnection();
@@ -74,10 +75,11 @@ export async function createPendingOrder(
 
         const [result]: any = await conn.query(
             `INSERT INTO orders (
-                customer_name, customer_email, address, postal_code, city, status, total,
+                customer_id, customer_name, customer_email, address, postal_code, city, status, total,
                 shipping_method, shipping_price, pickup_point_id, pickup_point_name, pickup_point_address
-             ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
+             ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
             [
+                customerId,
                 customer.customer_name,
                 customer.customer_email,
                 customer.address,

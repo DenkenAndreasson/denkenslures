@@ -1,17 +1,21 @@
 type FetchOptions = {
+    method?: string;
     headers?: Record<string, string>;
+    body?: URLSearchParams;
     timeoutMs?: number;
 };
 
 export async function fetchWithTimeout(
     url: string,
-    { headers = {}, timeoutMs = 5000 }: FetchOptions = {}
+    { method = "GET", headers = {}, body, timeoutMs = 5000 }: FetchOptions = {}
 ): Promise<Response> {
     let response : Response
     
     try {
         response = await fetch(url, {
+            method,
             headers,
+            body,
             signal: AbortSignal.timeout(timeoutMs),
         });
 } catch (err) {

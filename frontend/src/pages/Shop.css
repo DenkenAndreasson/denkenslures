@@ -590,3 +590,9 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.shop-account-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

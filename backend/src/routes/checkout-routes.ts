@@ -79,7 +79,8 @@ router.post("/", async (req, res) => {
 
     let order;
     try {
-        order = await createPendingOrder(customer, items, shipping_method, pickupPoint);
+        // Är kunden inloggad kopplas ordern till kontot och syns under Mina sidor.
+        order = await createPendingOrder(customer, items, shipping_method, req.session.customerId ?? null, pickupPoint);
     } catch (err) {
         if (err instanceof CartError) {
             res.status(400).json({ error: err.message });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { API_URL } from '../apiConfig.js'
 import { useCart } from '../context/CartContext.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 
@@ -8,6 +9,13 @@ function NavBar() {
   let { currency, setCurrency, currencies } = useCurrency()
   let itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   let [showBackToTop, setShowBackToTop] = useState(false)
+  let [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    fetch(`${API_URL}/auth/me`)
+      .then((response) => setLoggedIn(response.ok))
+      .catch(() => setLoggedIn(false))
+  }, [])
 
   useEffect(() => {
     let onScroll = () => setShowBackToTop(window.scrollY > 200)
@@ -36,6 +44,9 @@ function NavBar() {
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+            <Link to={loggedIn ? '/mina-sidor' : '/inloggning'} className="shop-cart-link">
+              {loggedIn ? 'Mina sidor' : 'Logga in'}
+            </Link>
             <Link to="/varukorg" className="shop-cart-link">
               Varukorg ({itemCount})
             </Link>

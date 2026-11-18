@@ -39,9 +39,14 @@ Servern, i en terminal:
 ```bash
 cd backend
 npm install
-npm run migrate
+npm run seed     # skapar tabellerna och lägger in testprodukter
+npm run migrate  # lägger till de nya kolumnerna
 npm run dev
 ```
+
+**OBS:** `npm run seed` tömmer produkter och ordrar, så kör den bara mot en tom databas eller en testdatabas. Kör inte seed mot den deployade shoppens databas. Finns tabellerna redan räcker `npm run migrate`.
+
+Importera sedan leverantörens produkter med knapparna på adminsidan.
 
 Klienten, i en annan terminal:
 
@@ -99,7 +104,7 @@ Främst för nycklarna. Algolias admin-nyckel, Stripes secret key, Supabase och 
 ## 3. Integrera eller bygga själv
 
 - **Frankfurter:** Egna kurser skulle kräva en datakälla från ECB och ett jobb som hämtar varje dag. Inte värt det för fyra valutor.
-- **Leverantören:** Det är deras produkter och lagersaldon. Alternativet är att själv lägga in dom produkt för produkt. Detta effektiviserar. 
+- **Leverantören:** DAlternativet är att själv lägga in dem produkt för produkt och hålla saldona uppdaterade för hand 
 - **Algolia:** En egen sökning med `LIKE` i MySQL hittar bara exakta delar av texten, så den klarar inte stavfel och rankar inte de bästa träffarna först. Att bygga det själv skulle kräva ett eget sökindex med stavfelstolerans och relevansrankning, vilket blir ett för stort projekt. Det är bättre att använda en så beprövad sökfunktion.
 - **Stripe:** Kortbetalningar kräver PCI-certifiering, avtal med banker, 3D Secure och bedrägeriskydd. Helt orimligt för en liten shop.
 - **Supabase:** Egen bildlagring betyder att vi behöver stå för lagringen av bilderna. Hos Vercel finns inte ens en beständig disk. Supabase förenklar.
@@ -172,7 +177,7 @@ För fälten som shoppen använder matchar sandlådesvaret schemat; jag hittade 
 
 ## Steg 2: Lägga till leveranstid
 
-Vi vill nu lägga till en funktion som räknar ut leveranskostnader. 
+Vi vill nu lägga till en funktion som räknar ut leveranstid. 
 
 **Prompt:**
 ```
@@ -244,7 +249,7 @@ Filens diagnostik visar inga fel. .env lästes inte, och inga kommandon som anv�
 
 ## Steg 4: Frakten i ordern och Stripe
 
-Vi ska fixa routen för frakten så vi kan få priser osv. 
+Frakten ska sparas på ordern och ingå i beloppet i Stripe.
 
 **Prompt:**
 ```
@@ -264,7 +269,7 @@ Frakt:
 
 Svara med status 200 och exakt den här formen:
 {
-  "goods_value": 349,
+"goods_value": 349,
   "free_shipping_threshold": 500,
   "prices": { "pickup_point": 59, "home_delivery": 99 },
   "service_points": [{ "id": "...", "name": "...", "address": "...", "postal_code": "...", "city": "..." }],
@@ -412,3 +417,79 @@ Rätta två saker i frontend/src/pages/Checkout.jsx. Läs inte .env och kör ing
 Båda sakerna är rättade i Checkout.jsx. En lyckad offert för samma normaliserade postnummer återanvänds vid fokusförlust; knappen för nytt försök fungerar efter fel.
 
 Frontendbygget och git diff --check passerade. .env lästes inte, och inga kommandon använde API-nycklar.
+
+# Inloggning med Google, labb 6
+
+Kunden loggar in med sitt Google-konto via OAuth 2.0 och OpenID Connect och ser sina beställningar under Mina sidor. Allt går via Express. Client secret och Googles tokens finns bara på servern.
+
+## Kom igång med inloggningen
+
+1. Skapa en OAuth-klient av typen **Web application** i Google Cloud Console under APIs & Services → Clients.
+2. Lägg till två adresser under **Authorized redirect URIs**. De måste stämma exakt, annars stoppar Google inloggningen med `redirect_uri_mismatch`:
+   - `https://denkenslures.vercel.app/api/auth/google/callback`
+   - `http://localhost:5173/api/auth/google/callback`
+3. Fyll i `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` och `GOOGLE_TIMEOUT_MS` i `backend/.env`. I Vercel läggs samma variabler i miljövariablerna, med den deployade adressen som `GOOGLE_REDIRECT_URI`. `SESSION_SECRET` måste också vara satt i Vercel.
+4. Kör `npm run migrate` i `backend`. Den skapar tabellen `customers` och kolumnen `orders.customer_id`. Tabellen `sessions` skapas av sessionsstoren första gången servern startar.
+5. Publicera appen under Audience i Google Cloud Console. I läget Testing kan bara utvalda testanvändare logga in. För att publicera kräver Google en integritetspolicy, som ligger på `/integritet`. Shoppen ber bara om `openid email profile`, så ingen granskning behövs.
+
+Lokalt skickar Vite allt under `/api` vidare till Express på port 3000. Då ligger frontend och backend på samma adress, precis som på Vercel, och cookien och callbacken fungerar likadant.
+
+## Inloggningsflödet
+
+1. Kunden klickar på **Logga in med Google**. Länken går till `/api/auth/google` på vår server, inte direkt till Google.
+2. Servern skapar ett slumpat `state` och en slumpad `code_verifier`, och sparar båda i kundens session. Kunden skickas till Google med `state`, `code_challenge` (SHA-256 av verifiern) och scope `openid email profile`.
+3. Kunden loggar in hos Google och godkänner att shoppen får namn och e-post.
+4. Google skickar tillbaka kunden till `/api/auth/google/callback` med en engångskod och samma `state`.
+5. Servern kontrollerar att `state` matchar det som sparades. Matchar det inte avvisas inloggningen. `state` och verifiern tas bort ur sessionen direkt, så de går bara att använda en gång.
+6. Servern byter koden mot tokens hos Google och skickar med client secret och `code_verifier`.
+7. Servern läser kunden ur ID-token och kontrollerar `iss`, `aud` och `exp` med Zod.
+8. Kunden hittas på `sub`, eller skapas om det är första gången.
+9. Servern skapar en ny session med kundens id och skickar kunden till Mina sidor.
+
+**`state`** skyddar mot CSRF i inloggningen. Utan det kan en angripare skicka en offer en callback-länk med angriparens egen kod, och offret blir inloggat på angriparens konto utan att märka det. **PKCE** skyddar koden. Om någon snappar upp koden på vägen tillbaka går den inte att byta mot tokens utan verifiern, som aldrig lämnat servern.
+
+Jag använder båda. De kostar några rader var, och de skyddar mot olika saker.
+
+## Tokens
+
+| Token | Vad den används till | Var den sparas | Hur länge den gäller |
+|---|---|---|---|
+| Authorization code | Byts mot tokens i steg 6 | Ingenstans, den finns bara i callbackens URL | Några minuter, och bara en gång |
+| ID-token (JWT) | Säger vem kunden är: `sub`, e-post och namn | Ingenstans, den läses och slängs i callbacken | En timme (`exp`) |
+| Access token | Används inte, shoppen anropar inga Google-API:er | Ingenstans, den slängs | En timme |
+| Shoppens session | Håller kunden inloggad i shoppen | Tabellen `sessions` i MySQL, cookien har bara sessionens id | En timme |
+
+Ingen refresh token begärs, eftersom shoppen inte behöver nå Google när kunden väl är inloggad. Inga Googles tokens når webbläsaren.
+
+ID-tokens signatur kontrolleras inte. Den kommer direkt från Googles token-endpoint över HTTPS, och då räcker TLS enligt OpenID Connect. Om en ID-token någon gång kommer från webbläsaren måste signaturen kontrolleras mot Googles nycklar.
+
+## Session eller JWT
+
+Jag valde session. Sessionen sparas i MySQL med `express-mysql-session`, och kunden får bara en httpOnly-cookie med sessionens id. Cookien är `secure` i produktion och `SameSite=Lax`, så att den följer med när Google skickar tillbaka kunden.
+
+- **Utloggning gäller direkt.** Sessionen raderas i databasen, så cookien slutar fungera även om någon har kopierat den. En JWT gäller tills den går ut, om man inte bygger en spärrlista, och då har man en session ändå.
+- **Shoppen har redan en databas.** En sessionstabell till kostar ingenting. JWT passar bättre när flera tjänster ska kontrollera inloggningen utan att fråga samma databas, och så ser inte shoppen ut.
+- **Minnet räcker inte på Vercel.** `express-session` sparade tidigare i minnet. På Vercel kan varje anrop hamna i en ny instans, så sessionen, och därmed `state` och verifiern, skulle försvinna mellan start och callback.
+
+Sessions-id:t byts vid inloggningen (`regenerate`), så att ett id som fanns innan kunden loggade in aldrig blir inloggat.
+
+## Kunden i databasen
+
+Kunden känns igen på Googles `sub`, aldrig på e-postadressen. `google_sub` är `UNIQUE` i `customers`, men e-postadressen är det inte.
+
+Shoppen har ingen inloggning med lösenord, så det finns inget vanligt konto att krocka med. Jag slår ändå aldrig ihop konton på e-post. Två konton med samma e-postadress blir två kunder. Annars skulle den som styr en e-postadress kunna se någon annans beställningar.
+
+## Mina sidor
+
+En order som görs inloggad får kundens id i `orders.customer_id`. `GET /api/account/orders` hämtar bara ordrar med den inloggade kundens id och svarar 401 utan inloggning. En annan kund ser alltså aldrig ordern. En order som görs utan inloggning kopplas inte till något konto.
+
+## När något går fel
+
+| Vad som händer | Vad kunden ser |
+|---|---|
+| Kunden avbryter hos Google | "Inloggningen avbröts. Du är inte inloggad." |
+| `state` saknas eller matchar inte | "Inloggningen kunde inte bekräftas. Försök igen." |
+| Google svarar inte inom `GOOGLE_TIMEOUT_MS`, svarar med fel eller med en ogiltig ID-token | "Google svarar inte just nu. Försök igen om en stund." |
+| Databasen svarar inte | "Något gick fel när vi loggade in dig. Försök igen om en stund." |
+
+Felen visas på `/inloggning`, och orsaken loggas på servern.

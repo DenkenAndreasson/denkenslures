@@ -20,10 +20,23 @@ const COLUMNS: Record<string, Record<string, string>> = {
         pickup_point_id: "VARCHAR(50) NULL",
         pickup_point_name: "VARCHAR(255) NULL",
         pickup_point_address: "VARCHAR(255) NULL",
+        customer_id: "INT NULL, ADD FOREIGN KEY (customer_id) REFERENCES customers(id)",
     },
 };
 
 async function migrate() {
+    // e-post är inte UNIQUE: kunden känns igen på google_sub, och konton slås inte ihop på e-post.
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS customers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            google_sub VARCHAR(255) NOT NULL UNIQUE,
+            email VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    console.log("+ customers finns");
+
     for (const [table, columns] of Object.entries(COLUMNS)) {
         const [rows]: any = await pool.query(
             `SELECT COLUMN_NAME FROM information_schema.COLUMNS

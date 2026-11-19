@@ -12,4 +12,9 @@ export const pool = mysql.createPool({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
+    // Clever Clouds gratisdatabas tillåter bara 5 anslutningar totalt, och varje Vercel-instans
+    // har en egen pool. Få anslutningar per pool, och lediga stängs efter 10 s.
+    connectionLimit: 2,
+    maxIdle: 0,
+    idleTimeout: 10_000,
 });

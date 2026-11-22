@@ -1,5 +1,6 @@
 import type { PoolConnection } from "mysql2/promise";
 import { pool } from "../db.js";
+import type { OrderConfirmation } from "../integrations/emailAdapter.js";
 import { calculateShippingPrice, type ShippingMethod } from "./shipping.js";
 
 export type CartLine = { product_id: number; quantity: number };
@@ -147,6 +148,33 @@ export async function markOrderPaid(orderId: number): Promise<number[] | null> {
     } finally {
         conn.release();
     }
+}
+
+export async function getOrderConfirmation(orderId: number): Promise<OrderConfirmation> {
+    const [orders]: any = await pool.query(
+        "SELECT customer_name, customer_email, shipping_price, total FROM orders WHERE id = ?",
+        [orderId]
+    );
+    const [items]: any = await pool.query(
+        `SELECT products.name, order_items.quantity, order_items.price_at_purchase
+         FROM order_items
+         JOIN products ON products.id = order_items.product_id
+         WHERE order_items.order_id = ?`,
+        [orderId]
+    );
+
+    return {
+        orderId,
+        customer_name: orders[0].customer_name,
+        customer_email: orders[0].customer_email,
+        lines: items.map((item: any) => ({
+            name: item.name,
+            price: Number(item.price_at_purchase),
+            quantity: item.quantity,
+        })),
+        shipping_price: Number(orders[0].shipping_price),
+        total: Number(orders[0].total),
+    };
 }
 
 export async function markOrderCancelled(orderId: number): Promise<boolean> {

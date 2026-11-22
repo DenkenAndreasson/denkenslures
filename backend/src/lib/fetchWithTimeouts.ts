@@ -1,7 +1,7 @@
 type FetchOptions = {
     method?: string;
     headers?: Record<string, string>;
-    body?: URLSearchParams;
+    body?: URLSearchParams | string;
     timeoutMs?: number;
 };
 

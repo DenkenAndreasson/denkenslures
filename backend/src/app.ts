@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomBytes } from "node:crypto";
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import expressSession from "express-session";
@@ -25,6 +26,12 @@ declare module "express-session" {
 
 const MySQLStore = MySQLStoreFactory(expressSession);
 
+// Nyckeln som signerar sessionscookien finns bara i .env. Utan den i produktion skulle vem som helst
+// som läst koden kunna signera en egen cookie, så då startar inte inloggningen alls.
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret && process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET saknas i miljövariablerna.");
+}
 
 
 const app = express();
@@ -45,7 +52,8 @@ app.use("/api/shipping", shippingRouter);
 app.use("/api/currency", currencyRouter);
 app.use(
     expressSession({
-        secret: process.env.SESSION_SECRET || "dev-secret-change-me",
+        // Lokalt utan SESSION_SECRET: en slumpad nyckel per start, så sessionerna gäller tills servern startas om.
+        secret: sessionSecret || randomBytes(32).toString("hex"),
         resave: false,
         saveUninitialized: false,
         // Sessionerna sparas i MySQL. I minnet skulle de försvinna mellan Vercels instanser.

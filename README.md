@@ -18,6 +18,8 @@ Alla tjänster körs i testläge eller sandlåda:
 | Algolia | Sök | Gratiskonto |
 | Supabase | Produktbilder | Gratisprojekt med en bucket |
 | MySQL | Databas | Valfri MySQL-databas, till exempel på Clever Cloud |
+| Google | Kundinloggning | OAuth-klient av typen Web application i Google Cloud Console |
+| Resend | Orderbekräftelser | Gratiskonto, API-nyckel med Sending access, avsändare `onboarding@resend.dev` |
 
 Valutakurserna kommer från Frankfurter, som inte kräver någon nyckel.
 
@@ -493,3 +495,18 @@ En order som görs inloggad får kundens id i `orders.customer_id`. `GET /api/ac
 | Databasen svarar inte | "Något gick fel när vi loggade in dig. Försök igen om en stund." |
 
 Felen visas på `/inloggning`, och orsaken loggas på servern.
+
+# Orderbekräftelse via e-post, labb 8
+
+När en order är betald skickar shoppen en orderbekräftelse via Resend. Bara [`emailAdapter.ts`](backend/src/integrations/emailAdapter.ts) känner till Resends adress och `RESEND_API_KEY`, och anropet har en timeout (`RESEND_TIMEOUT_MS`).
+
+1. Stripe anropar webhooken. Signaturen kontrolleras.
+2. `markOrderPaid` ändrar ordern från `pending` till `paid`. Först därefter skickas mejlet, aldrig när kunden klickar på "Köp".
+3. Mejlet har ordernumret i ämnesraden och kundens namn, produkterna med antal och pris, frakten och totalsumman, både som `html` och `text`. Namn och produktnamn escapas innan de hamnar i HTML:en.
+4. Resends svar valideras med Zod innan id:t loggas.
+
+**En bekräftelse per order.** Varje utskick har `Idempotency-Key: order-confirmation/<orderns id>`. Skickar Stripe samma webhook igen ändrar `markOrderPaid` ingenting, så inget nytt mejl skickas. Skulle mejlet ändå skickas en gång till med samma nyckel skickar Resend det inte igen.
+
+**Ett misslyckat mejl stoppar inte ordern.** Ordern är redan betald när mejlet skickas. Svarar Resend inte, eller med ett fel (t.ex. en felaktig `RESEND_API_KEY`), loggas felet och webhooken svarar ändå 200. Ett 500 skulle bara få Stripe att skicka om en händelse som redan är hanterad.
+
+Utan egen domän skickas mejlen från `onboarding@resend.dev`, och då kan Resend bara leverera till e-postadressen på Resend-kontot. Testa därför köpet med den adressen. `RESEND_API_KEY` och `EMAIL_FROM` ligger i Vercels miljövariabler.
